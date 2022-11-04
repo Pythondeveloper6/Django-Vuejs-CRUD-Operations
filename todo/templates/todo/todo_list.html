@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Bootstrap demo</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-Zenh87qX5JnK2Jl0vWa8Ck2rdkQ2Bzep5IDxbcnCeuOxjzrPF/et3URy9Bv1WTRi" crossorigin="anonymous">
+  </head>
+  <body>
+    <div class="container mt-5">
+        <div class="row" id="starting">
+            <h1>ToDo</h1>
+            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#NewModal">
+                New ToDO
+              </button>
+              
+            <div class="col-lg-10 mx-auto">
+                <table class="table">
+                    <thead>
+                      <tr>
+                        <th scope="col">#</th>
+                        <th scope="col">Task</th>
+                        <th scope="col">Notes</th>
+                        <th scope="col">Done</th>
+                        <th scope="col">Action</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr v-for="item in todo_list"> 
+                        <th scope="row">#</th>
+                        <td>${item.title}</td>
+                        <td>${item.notes}</td>
+                        <td>${item.done}</td>
+                        <td><button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#EditModal"
+                          v-on:click="getToDO(item.id)">
+                            Edit
+                          </button>
+                          <button type="button" class="btn btn-danger"
+                          v-on:click="todoDelete(item.id)">
+                            Delete
+                          </button>
+                          </td>
+                      </tr>
+
+                    </tbody>
+                  </table>
+            </div>
+            <!-- Modal -->
+            <div class="modal fade" id="NewModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                    <h1 class="modal-title fs-5" id="exampleModalLabel">New Data</h1>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                    <form v-on:submit.prevent="addToDo()">
+                      <div class="mb-3">
+                        <label for="exampleFormControlInput1" class="form-label">Task</label>
+                        <input type="text" class="form-control" id="example" v-model="new_todo.title">
+                      </div>
+                      
+                      <div class="mb-3">
+                        <label for="exampleFormControlInput1" class="form-label">Notes</label>
+                        <input type="text" class="form-control" id="exampleF" v-model="new_todo.notes">
+                      </div>
+                      <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <input type="submit" class="btn btn-primary" value="Save changes">
+                        </div>
+                    </form>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+                <!-- Modal -->
+                <div class="modal fade" id="EditModal" tabindex="-1" aria-labelledby="exampleModaLabel" aria-hidden="true">
+                    <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                        <h1 class="modal-title fs-5" id="exampleModalLabel">Edit Data</h1>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                          <form v-on:submit.prevent="todoUpdate()">
+                            <div class="mb-3">
+                              <label for="exampleFormControlInput1" class="form-label">Task</label>
+                              <input type="text" class="form-control" id="example" v-model="current_todo.title">
+                            </div>
+                            
+                            <div class="mb-3">
+                              <label for="exampleFormControlInput1" class="form-label">Notes</label>
+                              <input type="text" class="form-control" id="exampleF" v-model="current_todo.notes">
+                            </div>
+                            <div class="modal-footer">
+                              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                              <input type="submit" class="btn btn-primary" value="Save changes">
+                              </div>
+                          </form>
+                        </div>
+                    </div>
+                    </div>
+      
+      
+            </div>
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-OERcA2EqjJCMA+/3y+gxIOqMEjwtxJY7qPCqsdltbNJuaOe923+mo//f6V8Qbsw3" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.1.3/axios.min.js" integrity="sha512-0qU9M9jfqPw6FKkPafM3gy2CBAvUWnYVOfNPDYKVuRTel1PrciTj+a9P3loJB+j0QmN2Y0JYQmkBBS8W+mbezg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script type="text/javascript">
+      axios.defaults.xsrfCookieName = 'csrftoken'
+      axios.defaults.xsrfHeaderName = "X-CSRFTOKEN"
+        var app = new Vue({
+            el: '#starting',
+            delimiters:['${','}'],
+            data:{
+                todo_list: [] , 
+                new_todo:{
+                  'title':null , 
+                  'notes' : null , 
+                },
+                current_todo:{}
+            },
+            mounted:function(){
+                // run : load 
+                this.getTodo();
+            },
+            methods:{
+                getTodo:function(){
+                    axios.get('/todo/api/todo/')
+                    .then((response) => {
+                        this.todo_list = response.data
+                        console.log(response)
+                    }
+                )},
+              getToDO:function(id){
+                axios.get(`/todo/api/todo/${id}/`)
+                .then((response)=>{
+                  this.current_todo = response.data;
+                })
+              },
+              addToDo:function(){
+                axios.post('/todo/api/todo/',this.new_todo)
+                .then((response) =>{
+                  this.getTodo();
+                })
+              },
+
+              todoUpdate:function(){
+                axios.put(`/todo/api/todo/${this.current_todo.id}/` , this.current_todo)
+                .then((response)=>{
+                  this.current_todo = response.data ;
+                  this.getTodo();
+                })
+              },
+              todoDelete:function(id){
+                axios.delete(`/todo/api/todo/${id}/`)
+                .then((response)=>{
+                  this.getTodo();
+                })
+              },
+            }
+        })
+    </script>    
+
+
+
+</body>
+</html>
